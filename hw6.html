@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux 系統程式：行程與檔案操作完全指南</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Noto+Serif+TC:wght@300;400;700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1f2937;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --cyan: #39d5f5;
+    --orange: #ffa657;
+    --purple: #d2a8ff;
+    --red: #ff7b72;
+    --yellow: #e3b341;
+    --blue: #58a6ff;
+    --accent: #39d5f5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    line-height: 1.8;
+    font-size: 16px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #0f1f3d 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 80px 40px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(57,213,245,0.08), transparent);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(57,213,245,0.1);
+    border: 1px solid rgba(57,213,245,0.3);
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 5px 16px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    background: linear-gradient(120deg, var(--text) 30%, var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto 32px;
+    font-size: 17px;
+  }
+  .hero-tags {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  }
+  .tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--purple);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .tag.clickable {
+    cursor: pointer;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .tag.clickable:hover {
+    border-color: var(--purple);
+    background: rgba(210,168,255,0.12);
+    color: #ead4ff;
+  }
+
+  /* ── NAV ── */
+  .toc-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,17,23,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex; gap: 4px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .toc-bar a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 12px 10px;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  .toc-bar a:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+  .section { padding: 60px 0 40px; border-bottom: 1px solid var(--border); }
+  .section:last-child { border-bottom: none; }
+
+  h2 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+    background: rgba(57,213,245,0.1);
+    border: 1px solid rgba(57,213,245,0.25);
+    padding: 2px 10px; border-radius: 4px;
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--orange);
+    margin: 28px 0 12px;
+  }
+  p { color: #cdd9e5; margin-bottom: 14px; }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .code-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .code-dots { display: flex; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .code-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: 8px;
+  }
+  pre {
+    padding: 20px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    tab-size: 4;
+  }
+  /* Syntax colors */
+  .kw  { color: var(--red); }
+  .fn  { color: var(--blue); }
+  .str { color: var(--green); }
+  .num { color: var(--orange); }
+  .cmt { color: var(--muted); font-style: italic; }
+  .pp  { color: var(--purple); }
+  .tp  { color: var(--yellow); }
+
+  /* ── CONCEPT CARDS ── */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 24px 0; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: var(--cyan); }
+  .card-icon { font-size: 28px; margin-bottom: 10px; }
+  .card h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--cyan);
+    margin-bottom: 6px;
+  }
+  .card p { font-size: 14px; color: var(--muted); margin: 0; }
+
+  /* ── FD TABLE ── */
+  table {
+    width: 100%; border-collapse: collapse; margin: 20px 0;
+    font-size: 14px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--cyan);
+  }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); color: #cdd9e5; }
+  tr:hover td { background: var(--surface); }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--yellow);
+    background: rgba(227,179,65,0.06);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 14.5px;
+    color: #cdd9e5;
+  }
+  .callout.tip { border-color: var(--green); background: rgba(63,185,80,0.06); }
+  .callout.danger { border-color: var(--red); background: rgba(255,123,114,0.06); }
+  .callout strong { color: var(--yellow); }
+  .callout.tip strong { color: var(--green); }
+  .callout.danger strong { color: var(--red); }
+
+  /* ── DIAGRAM ── */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    overflow-x: auto;
+  }
+  .diagram .arrow { color: var(--cyan); }
+  .diagram .box { color: var(--orange); }
+  .diagram .label { color: var(--muted); }
+  .diagram .fd { color: var(--purple); }
+  .diagram .val { color: var(--green); }
+
+  /* ── PROCESS DIAGRAM ── */
+  .proc-diagram {
+    display: flex; gap: 20px; align-items: flex-start;
+    flex-wrap: wrap; margin: 20px 0;
+  }
+  .proc-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    min-width: 160px;
+    text-align: center;
+  }
+  .proc-box.parent { border-color: var(--blue); }
+  .proc-box.child  { border-color: var(--green); }
+  .proc-box .pid {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .proc-box .name { font-size: 15px; font-weight: 600; }
+  .proc-box.parent .name { color: var(--blue); }
+  .proc-box.child  .name { color: var(--green); }
+  .fork-arrow {
+    align-self: center; font-size: 28px; color: var(--cyan);
+    font-family: monospace;
+  }
+
+  /* ── STEP LIST ── */
+  .steps { counter-reset: step; margin: 20px 0; }
+  .step {
+    counter-increment: step;
+    display: flex; gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .step::before {
+    content: counter(step);
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    background: rgba(57,213,245,0.1);
+    border: 1px solid rgba(57,213,245,0.3);
+    border-radius: 50%;
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step p { margin: 0; font-size: 15px; padding-top: 3px; }
+
+  /* ── RETURN VALUE BADGE ── */
+  .ret { display: inline-flex; align-items: center; gap: 6px; margin: 4px 2px; }
+  .ret-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .ret-ok { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .ret-err { background: rgba(255,123,114,0.15); color: var(--red); border: 1px solid rgba(255,123,114,0.3); }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center; padding: 40px 24px;
+    color: var(--muted); font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 13px;
+    color: var(--orange);
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Linux 系統程式 / System Programming</div>
+  <h1>行程管理 × 檔案 I/O<br>完全指南</h1>
+  <p>深入理解 fork、execvp、open、read、write、dup2 與標準串流 0/1/2，從原理到實作一次搞清楚</p>
+  <div class="hero-tags">
+    <span class="tag clickable" onclick="document.getElementById('fork').scrollIntoView({behavior:'smooth'})">fork()</span>
+    <span class="tag clickable" onclick="document.getElementById('execvp').scrollIntoView({behavior:'smooth'})">execvp()</span>
+    <span class="tag clickable" onclick="document.getElementById('open-rw').scrollIntoView({behavior:'smooth'})">open()</span>
+    <span class="tag clickable" onclick="document.getElementById('open-rw').scrollIntoView({behavior:'smooth'})">read()</span>
+    <span class="tag clickable" onclick="document.getElementById('open-rw').scrollIntoView({behavior:'smooth'})">write()</span>
+    <span class="tag clickable" onclick="document.getElementById('dup2').scrollIntoView({behavior:'smooth'})">dup2()</span>
+    <span class="tag clickable" onclick="document.getElementById('fd').scrollIntoView({behavior:'smooth'})">stdin=0</span>
+    <span class="tag clickable" onclick="document.getElementById('fd').scrollIntoView({behavior:'smooth'})">stdout=1</span>
+    <span class="tag clickable" onclick="document.getElementById('fd').scrollIntoView({behavior:'smooth'})">stderr=2</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="toc-bar">
+  <a onclick="document.getElementById('fd').scrollIntoView({behavior:'smooth'})">§1 檔案描述符</a>
+  <a onclick="document.getElementById('open-rw').scrollIntoView({behavior:'smooth'})">§2 open/read/write</a>
+  <a onclick="document.getElementById('fork').scrollIntoView({behavior:'smooth'})">§3 fork()</a>
+  <a onclick="document.getElementById('execvp').scrollIntoView({behavior:'smooth'})">§4 execvp()</a>
+  <a onclick="document.getElementById('dup2').scrollIntoView({behavior:'smooth'})">§5 dup2()</a>
+  <a onclick="document.getElementById('pipeline').scrollIntoView({behavior:'smooth'})">§6 管線實作</a>
+  <a onclick="document.getElementById('examples').scrollIntoView({behavior:'smooth'})">§7 完整範例</a>
+</nav>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════════ §1 FD -->
+<section class="section" id="fd">
+  <h2><span class="num">§ 01</span> 檔案描述符（File Descriptor）</h2>
+
+  <p>在 Linux 中，<strong>所有 I/O 都透過整數索引來操作</strong>——這個整數就叫做「檔案描述符」（File Descriptor，簡稱 fd）。不論是磁碟檔案、網路連線、鍵盤、螢幕，核心都統一抽象成同一套介面。</p>
+
+  <h3>三個預設描述符</h3>
+  <p>每個行程啟動時，核心自動開啟三個 fd：</p>
+
+  <table>
+    <tr><th>fd 編號</th><th>名稱</th><th>常數（&lt;unistd.h&gt;）</th><th>預設連接到</th><th>用途</th></tr>
+    <tr><td><code>0</code></td><td>stdin</td><td><code>STDIN_FILENO</code></td><td>鍵盤</td><td>讀取輸入</td></tr>
+    <tr><td><code>1</code></td><td>stdout</td><td><code>STDOUT_FILENO</code></td><td>終端機螢幕</td><td>輸出結果</td></tr>
+    <tr><td><code>2</code></td><td>stderr</td><td><code>STDERR_FILENO</code></td><td>終端機螢幕</td><td>輸出錯誤訊息</td></tr>
+    <tr><td><code>3+</code></td><td>使用者 fd</td><td>—</td><td>由 open() 指定</td><td>任意檔案/pipe</td></tr>
+  </table>
+
+  <div class="callout tip">
+    <strong>💡 重要觀念：</strong> fd 0/1/2 只是整數。若用 <code>dup2()</code> 把它們重新導向到檔案，原本的鍵盤/螢幕連線就被取代，<strong>這正是 Shell 重新導向（&lt; &gt;）的底層機制</strong>。
+  </div>
+
+  <div class="diagram">
+<pre>
+ 行程（Process）內部
+ ┌──────────────────────────────────────┐
+ │  fd 表（File Descriptor Table）        │
+ │  ┌───┬──────────────────────────┐    │
+ │  │ 0 │ ──────────────────────▶ 鍵盤   │
+ │  ├───┼──────────────────────────┤    │
+ │  │ 1 │ ──────────────────────▶ 螢幕   │
+ │  ├───┼──────────────────────────┤    │
+ │  │ 2 │ ──────────────────────▶ 螢幕   │
+ │  ├───┼──────────────────────────┤    │
+ │  │ 3 │ ──────────────────────▶ test.txt （open後）│
+ │  └───┴──────────────────────────┘    │
+ └──────────────────────────────────────┘
+</pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">fd_demo.c — 直接用 write() 寫入 fd</span>
+    </div>
+<pre><span class="pp">#include &lt;unistd.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* fd=1 就是 stdout，fd=2 就是 stderr */</span>
+    <span class="fn">write</span>(<span class="num">1</span>, <span class="str">"這行輸出到 stdout (fd=1)\n"</span>, <span class="num">28</span>);
+    <span class="fn">write</span>(<span class="num">2</span>, <span class="str">"這行輸出到 stderr (fd=2)\n"</span>, <span class="num">28</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ §2 open/read/write -->
+<section class="section" id="open-rw">
+  <h2><span class="num">§ 02</span> open / read / write / close</h2>
+
+  <h3>open() — 開啟或建立檔案</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">函式原型</span>
+    </div>
+<pre><span class="pp">#include &lt;fcntl.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">open</span>(<span class="kw">const</span> <span class="tp">char</span> *<span class="num">path</span>, <span class="tp">int</span> flags);
+<span class="tp">int</span> <span class="fn">open</span>(<span class="kw">const</span> <span class="tp">char</span> *<span class="num">path</span>, <span class="tp">int</span> flags, <span class="tp">mode_t</span> mode);
+<span class="cmt">/* 成功: 回傳 fd (≥3)；失敗: 回傳 -1，並設 errno */</span></pre>
+  </div>
+
+  <table>
+    <tr><th>旗標（flags）</th><th>意義</th></tr>
+    <tr><td><code>O_RDONLY</code></td><td>唯讀</td></tr>
+    <tr><td><code>O_WRONLY</code></td><td>唯寫</td></tr>
+    <tr><td><code>O_RDWR</code></td><td>讀寫</td></tr>
+    <tr><td><code>O_CREAT</code></td><td>不存在則建立（需提供 mode）</td></tr>
+    <tr><td><code>O_TRUNC</code></td><td>開啟時清空檔案</td></tr>
+    <tr><td><code>O_APPEND</code></td><td>每次寫入都追加到尾端</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">file_rw.c — 完整讀寫範例</span>
+    </div>
+<pre><span class="pp">#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* ── 1. 寫入檔案 ── */</span>
+    <span class="tp">int</span> fd = <span class="fn">open</span>(<span class="str">"hello.txt"</span>, O_WRONLY | O_CREAT | O_TRUNC, <span class="num">0644</span>);
+    <span class="kw">if</span> (fd == -<span class="num">1</span>) { <span class="fn">perror</span>(<span class="str">"open"</span>); <span class="kw">return</span> <span class="num">1</span>; }
+
+    <span class="kw">const</span> <span class="tp">char</span> *msg = <span class="str">"Hello, Linux File System!\n"</span>;
+    <span class="tp">ssize_t</span> n = <span class="fn">write</span>(fd, msg, <span class="fn">strlen</span>(msg));
+    <span class="fn">printf</span>(<span class="str">"寫入 %zd 個位元組\n"</span>, n);
+    <span class="fn">close</span>(fd);                   <span class="cmt">/* ★ 一定要關閉！ */</span>
+
+    <span class="cmt">/* ── 2. 讀回檔案 ── */</span>
+    fd = <span class="fn">open</span>(<span class="str">"hello.txt"</span>, O_RDONLY);
+    <span class="kw">if</span> (fd == -<span class="num">1</span>) { <span class="fn">perror</span>(<span class="str">"open"</span>); <span class="kw">return</span> <span class="num">1</span>; }
+
+    <span class="tp">char</span> buf[<span class="num">128</span>] = {<span class="num">0</span>};
+    n = <span class="fn">read</span>(fd, buf, <span class="kw">sizeof</span>(buf) - <span class="num">1</span>);
+    <span class="fn">printf</span>(<span class="str">"讀回：%s"</span>, buf);
+    <span class="fn">close</span>(fd);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <div class="callout danger">
+    <strong>⚠ 常見錯誤：</strong>忘記呼叫 <code>close(fd)</code>。每個 <code>open()</code> 都會佔用一個 fd 槽，不關閉最終會導致「Too many open files」錯誤，且寫入資料可能不被 flush 到磁碟。
+  </div>
+
+  <h3>read() / write() 回傳值說明</h3>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">📖</div>
+      <h4>read(fd, buf, count)</h4>
+      <p>從 fd 最多讀 count bytes 到 buf。<span class="ret"><span class="ret-val ret-ok">&gt;0</span>實際讀到的 bytes</span> <span class="ret"><span class="ret-val ret-ok">0</span>EOF（檔案結束）</span> <span class="ret"><span class="ret-val ret-err">-1</span>錯誤</span></p>
+    </div>
+    <div class="card">
+      <div class="card-icon">✏️</div>
+      <h4>write(fd, buf, count)</h4>
+      <p>從 buf 最多寫 count bytes 到 fd。<span class="ret"><span class="ret-val ret-ok">&gt;0</span>實際寫出的 bytes</span> <span class="ret"><span class="ret-val ret-err">-1</span>錯誤</span></p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔒</div>
+      <h4>close(fd)</h4>
+      <p>釋放 fd 槽，確保資料 flush。<span class="ret"><span class="ret-val ret-ok">0</span>成功</span> <span class="ret"><span class="ret-val ret-err">-1</span>錯誤</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ §3 fork -->
+<section class="section" id="fork">
+  <h2><span class="num">§ 03</span> fork() — 複製行程</h2>
+
+  <p><code>fork()</code> 會讓目前的行程（parent）複製出一個幾乎完全相同的子行程（child）。兩者從 <code>fork()</code> 回傳點同時繼續執行，差別只在回傳值。</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">函式原型</span>
+    </div>
+<pre><span class="pp">#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;</span>
+
+<span class="tp">pid_t</span> <span class="fn">fork</span>(<span class="tp">void</span>);
+<span class="cmt">/* 在 parent 中回傳 child 的 PID（> 0）
+   在 child  中回傳 0
+   失敗時回傳 -1（parent 中）                */</span></pre>
+  </div>
+
+  <div class="proc-diagram">
+    <div class="proc-box parent">
+      <div class="pid">PID = 1234</div>
+      <div class="name">Parent Process</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">fork() 回傳<br><span style="color:var(--green)">child PID = 1235</span></div>
+    </div>
+    <div class="fork-arrow">→ fork() →</div>
+    <div class="proc-box child">
+      <div class="pid">PID = 1235</div>
+      <div class="name">Child Process</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">fork() 回傳<br><span style="color:var(--cyan)">0</span></div>
+    </div>
+  </div>
+
+  <h3>Child 繼承 Parent 的什麼？</h3>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">📋</div>
+      <h4>繼承（複製）</h4>
+      <p>程式碼、資料（獨立副本）、開啟的 fd 列表、工作目錄、環境變數</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🆕</div>
+      <h4>獨立（不同）</h4>
+      <p>PID、記憶體空間（Copy-on-Write）、執行中的 fd 位置游標（某些情況共用）</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">fork1.c — 基本 fork 用法</span>
+    </div>
+<pre><span class="pp">#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">main</span>() {
+    <span class="tp">pid_t</span> pid = <span class="fn">fork</span>();
+
+    <span class="kw">if</span> (pid &lt; <span class="num">0</span>) {
+        <span class="fn">perror</span>(<span class="str">"fork 失敗"</span>);
+        <span class="kw">return</span> <span class="num">1</span>;
+
+    } <span class="kw">else if</span> (pid == <span class="num">0</span>) {
+        <span class="cmt">/* ── 子行程區塊 ── */</span>
+        <span class="fn">printf</span>(<span class="str">"[Child]  PID=%d, Parent PID=%d\n"</span>,
+               <span class="fn">getpid</span>(), <span class="fn">getppid</span>());
+        <span class="kw">return</span> <span class="num">0</span>;
+
+    } <span class="kw">else</span> {
+        <span class="cmt">/* ── 父行程區塊 ── */</span>
+        <span class="fn">printf</span>(<span class="str">"[Parent] PID=%d, Child PID=%d\n"</span>,
+               <span class="fn">getpid</span>(), pid);
+        <span class="tp">int</span> status;
+        <span class="fn">waitpid</span>(pid, &amp;status, <span class="num">0</span>);   <span class="cmt">/* 等待子行程結束，回收資源 */</span>
+        <span class="fn">printf</span>(<span class="str">"[Parent] 子行程結束，exit code=%d\n"</span>,
+               WEXITSTATUS(status));
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <div class="callout">
+    <strong>⚙ waitpid() 的重要性：</strong>若 parent 不呼叫 <code>waitpid()</code>，已結束的子行程會變成「Zombie（殭屍行程）」，佔用系統 PID 資源直到 parent 結束。
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ §4 execvp -->
+<section class="section" id="execvp">
+  <h2><span class="num">§ 04</span> execvp() — 執行新程式</h2>
+
+  <p><code>exec</code> 系列函式會把目前行程的「程式影像」完全替換成新程式，<strong>原本的程式碼不再執行</strong>。搭配 <code>fork()</code> 即可在子行程中執行任意命令。</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">函式原型</span>
+    </div>
+<pre><span class="pp">#include &lt;unistd.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">execvp</span>(<span class="kw">const</span> <span class="tp">char</span> *file, <span class="tp">char</span> *<span class="kw">const</span> argv[]);
+<span class="cmt">/* file  : 程式名稱（自動搜尋 PATH）
+   argv  : 參數陣列，argv[0] = 程式名，最後一個必須是 NULL
+   成功時不回傳（行程已被取代）；失敗回傳 -1                  */</span></pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>💡 exec 函式族：</strong><code>execvp</code>（v=vector陣列, p=自動搜PATH）是最常用的。其他變體：<code>execv</code>（需完整路徑）、<code>execl</code>（l=可變參數）、<code>execle</code>（e=自訂環境變數）。
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">exec1.c — fork + execvp 執行 ls -l</span>
+    </div>
+<pre><span class="pp">#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">main</span>() {
+    <span class="tp">pid_t</span> pid = <span class="fn">fork</span>();
+
+    <span class="kw">if</span> (pid == <span class="num">0</span>) {
+        <span class="cmt">/* 子行程：執行 ls -l */</span>
+        <span class="tp">char</span> *args[] = {<span class="str">"ls"</span>, <span class="str">"-l"</span>, NULL};  <span class="cmt">/* ★ 最後必須是 NULL */</span>
+        <span class="fn">execvp</span>(<span class="str">"ls"</span>, args);
+
+        <span class="cmt">/* 若 execvp 回傳到這裡，表示執行失敗 */</span>
+        <span class="fn">perror</span>(<span class="str">"execvp"</span>);
+        <span class="kw">return</span> <span class="num">1</span>;
+
+    } <span class="kw">else if</span> (pid &gt; <span class="num">0</span>) {
+        <span class="cmt">/* 父行程：等待子行程 */</span>
+        <span class="fn">waitpid</span>(pid, NULL, <span class="num">0</span>);
+        <span class="fn">printf</span>(<span class="str">"[Parent] ls 執行完畢\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <h3>fork + exec 的核心流程</h3>
+  <div class="steps">
+    <div class="step"><p>Parent 呼叫 <code>fork()</code>，產生 Child（繼承所有 fd）</p></div>
+    <div class="step"><p>Child 視需求用 <code>dup2()</code> 重新導向 stdin/stdout</p></div>
+    <div class="step"><p>Child 呼叫 <code>execvp()</code>，整個行程影像被新程式取代</p></div>
+    <div class="step"><p>Parent 呼叫 <code>waitpid()</code>，等待 Child 結束並回收資源</p></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ §5 dup2 -->
+<section class="section" id="dup2">
+  <h2><span class="num">§ 05</span> dup2() — 重新導向 fd</h2>
+
+  <p><code>dup2(oldfd, newfd)</code> 會讓 <strong>newfd</strong> 變成 <strong>oldfd</strong> 的複製品——也就是說，之後對 newfd 的讀寫，實際上會作用在 oldfd 所指向的目標。這是實作 I/O 重新導向的關鍵。</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">函式原型</span>
+    </div>
+<pre><span class="pp">#include &lt;unistd.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">dup2</span>(<span class="tp">int</span> oldfd, <span class="tp">int</span> newfd);
+<span class="cmt">/* 若 newfd 已開啟，先自動 close(newfd) 再複製
+   成功: 回傳 newfd；失敗: 回傳 -1              */</span></pre>
+  </div>
+
+  <h3>重新導向 stdout 到檔案（模擬 ./prog &gt; out.txt）</h3>
+
+  <div class="diagram">
+<pre>
+ <span class="label">執行前：</span>
+ fd=1 <span class="arrow">──▶</span> <span class="box">螢幕</span>
+ fd=3 <span class="arrow">──▶</span> <span class="box">out.txt</span>  （open 回傳 3）
+
+ <span class="label">dup2(3, 1) 之後：</span>
+ fd=1 <span class="arrow">──▶</span> <span class="box">out.txt</span>  ★ stdout 現在寫入檔案
+ fd=3 <span class="arrow">──▶</span> <span class="box">out.txt</span>
+
+ <span class="label">close(3) 之後（清理多餘 fd）：</span>
+ fd=1 <span class="arrow">──▶</span> <span class="box">out.txt</span>
+ fd=3   已關閉
+</pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">redirect_out.c — 把子行程輸出導向檔案</span>
+    </div>
+<pre><span class="pp">#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">main</span>() {
+    <span class="tp">int</span> fd = <span class="fn">open</span>(<span class="str">"out.txt"</span>, O_WRONLY | O_CREAT | O_TRUNC, <span class="num">0644</span>);
+
+    <span class="tp">pid_t</span> pid = <span class="fn">fork</span>();
+    <span class="kw">if</span> (pid == <span class="num">0</span>) {
+        <span class="cmt">/* 子行程：把 stdout(1) 導向 fd（out.txt） */</span>
+        <span class="fn">dup2</span>(fd, <span class="num">1</span>);   <span class="cmt">/* 現在 printf/write(1,...) 都寫到 out.txt */</span>
+        <span class="fn">close</span>(fd);     <span class="cmt">/* fd=3 已不需要，關掉 */</span>
+
+        <span class="tp">char</span> *args[] = {<span class="str">"ls"</span>, <span class="str">"-l"</span>, NULL};
+        <span class="fn">execvp</span>(<span class="str">"ls"</span>, args);
+        <span class="fn">perror</span>(<span class="str">"execvp"</span>);
+        <span class="kw">return</span> <span class="num">1</span>;
+    }
+
+    <span class="fn">close</span>(fd);              <span class="cmt">/* 父行程也要關閉不需要的 fd */</span>
+    <span class="fn">waitpid</span>(pid, NULL, <span class="num">0</span>);
+    <span class="fn">printf</span>(<span class="str">"ls 結果已寫入 out.txt\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+<span class="cmt">/* Shell 等效：ls -l &gt; out.txt */</span></pre>
+  </div>
+
+  <h3>重新導向 stdin 從檔案讀取（模擬 ./prog &lt; in.txt）</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">redirect_in.c — 把 stdin 導向檔案</span>
+    </div>
+<pre><span class="pp">#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">main</span>() {
+    <span class="tp">int</span> fd = <span class="fn">open</span>(<span class="str">"input.txt"</span>, O_RDONLY);
+
+    <span class="tp">pid_t</span> pid = <span class="fn">fork</span>();
+    <span class="kw">if</span> (pid == <span class="num">0</span>) {
+        <span class="fn">dup2</span>(fd, <span class="num">0</span>);    <span class="cmt">/* stdin(0) 現在從 input.txt 讀 */</span>
+        <span class="fn">close</span>(fd);
+
+        <span class="tp">char</span> *args[] = {<span class="str">"cat"</span>, NULL};
+        <span class="fn">execvp</span>(<span class="str">"cat"</span>, args);
+        <span class="fn">perror</span>(<span class="str">"execvp"</span>);
+        <span class="kw">return</span> <span class="num">1</span>;
+    }
+
+    <span class="fn">close</span>(fd);
+    <span class="fn">waitpid</span>(pid, NULL, <span class="num">0</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+<span class="cmt">/* Shell 等效：cat &lt; input.txt */</span></pre>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ §6 pipeline -->
+<section class="section" id="pipeline">
+  <h2><span class="num">§ 06</span> pipe() + dup2() — 行程間管線</h2>
+
+  <p>Shell 中的 <code>cmd1 | cmd2</code> 使用 <code>pipe()</code> 建立一對 fd，再用 <code>dup2()</code> 把 cmd1 的 stdout 接到管線寫端、cmd2 的 stdin 接到管線讀端。</p>
+
+  <div class="diagram">
+<pre>
+ <span class="label">pipe(pipefd) 建立後：</span>
+
+ pipefd[<span class="num">0</span>] <span class="arrow">◀───</span> <span class="box">PIPE 緩衝區</span> <span class="arrow">◀───</span> pipefd[<span class="num">1</span>]
+ （讀端）                              （寫端）
+
+ <span class="label">dup2 之後：</span>
+
+ <span class="box">cmd1</span>  stdout(1) <span class="arrow">─▶</span> pipefd[<span class="num">1</span>] <span class="arrow">─▶</span> <span class="box">PIPE</span> <span class="arrow">─▶</span> pipefd[<span class="num">0</span>] <span class="arrow">─▶</span> stdin(0) <span class="box">cmd2</span>
+</pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">pipe1.c — 實作 ls -l | grep .c</span>
+    </div>
+<pre><span class="pp">#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;</span>
+
+<span class="tp">int</span> <span class="fn">main</span>() {
+    <span class="tp">int</span> pipefd[<span class="num">2</span>];
+    <span class="fn">pipe</span>(pipefd);   <span class="cmt">/* pipefd[0]=讀端, pipefd[1]=寫端 */</span>
+
+    <span class="cmt">/* ── 子行程1：ls -l（stdout → pipe寫端） ── */</span>
+    <span class="tp">pid_t</span> pid1 = <span class="fn">fork</span>();
+    <span class="kw">if</span> (pid1 == <span class="num">0</span>) {
+        <span class="fn">dup2</span>(pipefd[<span class="num">1</span>], <span class="num">1</span>);    <span class="cmt">/* stdout → pipe[1] */</span>
+        <span class="fn">close</span>(pipefd[<span class="num">0</span>]);      <span class="cmt">/* 關閉不用的讀端 */</span>
+        <span class="fn">close</span>(pipefd[<span class="num">1</span>]);
+        <span class="tp">char</span> *args[] = {<span class="str">"ls"</span>, <span class="str">"-l"</span>, NULL};
+        <span class="fn">execvp</span>(<span class="str">"ls"</span>, args);
+        <span class="fn">perror</span>(<span class="str">"execvp ls"</span>); <span class="kw">return</span> <span class="num">1</span>;
+    }
+
+    <span class="cmt">/* ── 子行程2：grep .c（stdin ← pipe讀端） ── */</span>
+    <span class="tp">pid_t</span> pid2 = <span class="fn">fork</span>();
+    <span class="kw">if</span> (pid2 == <span class="num">0</span>) {
+        <span class="fn">dup2</span>(pipefd[<span class="num">0</span>], <span class="num">0</span>);    <span class="cmt">/* stdin ← pipe[0] */</span>
+        <span class="fn">close</span>(pipefd[<span class="num">1</span>]);      <span class="cmt">/* 關閉不用的寫端 */</span>
+        <span class="fn">close</span>(pipefd[<span class="num">0</span>]);
+        <span class="tp">char</span> *args[] = {<span class="str">"grep"</span>, <span class="str">"\\.c"</span>, NULL};
+        <span class="fn">execvp</span>(<span class="str">"grep"</span>, args);
+        <span class="fn">perror</span>(<span class="str">"execvp grep"</span>); <span class="kw">return</span> <span class="num">1</span>;
+    }
+
+    <span class="cmt">/* ── 父行程：關閉 pipe 並等待 ── */</span>
+    <span class="fn">close</span>(pipefd[<span class="num">0</span>]);
+    <span class="fn">close</span>(pipefd[<span class="num">1</span>]);  <span class="cmt">/* ★ 父行程關閉寫端，grep 才能感知到 EOF */</span>
+    <span class="fn">waitpid</span>(pid1, NULL, <span class="num">0</span>);
+    <span class="fn">waitpid</span>(pid2, NULL, <span class="num">0</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <div class="callout danger">
+    <strong>⚠ 管線死結（Deadlock）常見原因：</strong>父行程若保留著 pipe 的寫端（<code>pipefd[1]</code>）不關閉，<code>grep</code>（讀端的行程）會永遠等待更多輸入，因為核心認為「還有人持有寫端」，不會發送 EOF → 造成死結。
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ §7 examples -->
+<section class="section" id="examples">
+  <h2><span class="num">§ 07</span> 完整綜合範例</h2>
+
+  <h3>範例 A：迷你 Shell（支援 &gt; 輸出重新導向）</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">minishell.c — 解析並執行帶有 &gt; 的命令</span>
+    </div>
+<pre><span class="pp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;</span>
+
+<span class="pp">#define MAXARGS 64</span>
+
+<span class="tp">void</span> <span class="fn">run_cmd</span>(<span class="tp">char</span> *argv[], <span class="kw">const</span> <span class="tp">char</span> *outfile) {
+    <span class="tp">pid_t</span> pid = <span class="fn">fork</span>();
+    <span class="kw">if</span> (pid == <span class="num">0</span>) {
+        <span class="kw">if</span> (outfile) {
+            <span class="tp">int</span> fd = <span class="fn">open</span>(outfile,
+                         O_WRONLY | O_CREAT | O_TRUNC, <span class="num">0644</span>);
+            <span class="kw">if</span> (fd &lt; <span class="num">0</span>) { <span class="fn">perror</span>(<span class="str">"open"</span>); <span class="fn">exit</span>(<span class="num">1</span>); }
+            <span class="fn">dup2</span>(fd, <span class="num">1</span>);  <span class="cmt">/* stdout → 檔案 */</span>
+            <span class="fn">close</span>(fd);
+        }
+        <span class="fn">execvp</span>(argv[<span class="num">0</span>], argv);
+        <span class="fn">perror</span>(<span class="str">"execvp"</span>); <span class="fn">exit</span>(<span class="num">1</span>);
+    } <span class="kw">else</span> {
+        <span class="fn">waitpid</span>(pid, NULL, <span class="num">0</span>);
+    }
+}
+
+<span class="tp">int</span> <span class="fn">main</span>() {
+    <span class="tp">char</span> line[<span class="num">512</span>];
+    <span class="fn">printf</span>(<span class="str">"mysh$ "</span>);
+    <span class="kw">while</span> (<span class="fn">fgets</span>(line, <span class="kw">sizeof</span>(line), stdin)) {
+        line[<span class="fn">strcspn</span>(line, <span class="str">"\n"</span>)] = <span class="str">'\0'</span>;
+
+        <span class="cmt">/* 分割 &gt; */</span>
+        <span class="tp">char</span> *outfile = NULL;
+        <span class="tp">char</span> *redir = <span class="fn">strchr</span>(line, <span class="str">'&gt;'</span>);
+        <span class="kw">if</span> (redir) {
+            *redir = <span class="str">'\0'</span>;
+            outfile = redir + <span class="num">1</span>;
+            <span class="kw">while</span> (*outfile == <span class="str">' '</span>) outfile++; <span class="cmt">/* 去空白 */</span>
+        }
+
+        <span class="cmt">/* Tokenize */</span>
+        <span class="tp">char</span> *argv[MAXARGS]; <span class="tp">int</span> argc = <span class="num">0</span>;
+        <span class="tp">char</span> *tok = <span class="fn">strtok</span>(line, <span class="str">" \t"</span>);
+        <span class="kw">while</span> (tok &amp;&amp; argc &lt; MAXARGS-<span class="num">1</span>) {
+            argv[argc++] = tok;
+            tok = <span class="fn">strtok</span>(NULL, <span class="str">" \t"</span>);
+        }
+        argv[argc] = NULL;
+        <span class="kw">if</span> (argc == <span class="num">0</span>) { <span class="fn">printf</span>(<span class="str">"mysh$ "</span>); <span class="kw">continue</span>; }
+
+        <span class="fn">run_cmd</span>(argv, outfile);
+        <span class="fn">printf</span>(<span class="str">"mysh$ "</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <h3>範例 B：使用 write/read 自製 cat 命令</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="code-title">mycat.c — 不用 stdio，純用系統呼叫</span>
+    </div>
+<pre><span class="pp">#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;</span>
+
+<span class="pp">#define BUF 4096</span>
+
+<span class="tp">int</span> <span class="fn">main</span>(<span class="tp">int</span> argc, <span class="tp">char</span> *argv[]) {
+    <span class="tp">int</span> fd = (argc &gt; <span class="num">1</span>) ? <span class="fn">open</span>(argv[<span class="num">1</span>], O_RDONLY) : <span class="num">0</span>;
+    <span class="kw">if</span> (fd &lt; <span class="num">0</span>) { <span class="fn">write</span>(<span class="num">2</span>, <span class="str">"open error\n"</span>, <span class="num">11</span>); <span class="kw">return</span> <span class="num">1</span>; }
+
+    <span class="tp">char</span> buf[BUF];
+    <span class="tp">ssize_t</span> n;
+    <span class="kw">while</span> ((n = <span class="fn">read</span>(fd, buf, BUF)) &gt; <span class="num">0</span>)
+        <span class="fn">write</span>(<span class="num">1</span>, buf, n);   <span class="cmt">/* 讀多少寫多少到 stdout */</span>
+
+    <span class="kw">if</span> (fd != <span class="num">0</span>) <span class="fn">close</span>(fd);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <h3>概念總整理</h3>
+
+  <table>
+    <tr><th>系統呼叫</th><th>作用</th><th>重要參數/回傳值</th><th>常見用途</th></tr>
+    <tr>
+      <td><code>open()</code></td>
+      <td>開啟/建立檔案，取得 fd</td>
+      <td>flags（O_RDONLY…）, mode（0644）</td>
+      <td>讀寫檔案前的第一步</td>
+    </tr>
+    <tr>
+      <td><code>read()</code></td>
+      <td>從 fd 讀資料到 buffer</td>
+      <td>回傳 0=EOF, -1=錯誤</td>
+      <td>讀檔案/pipe/stdin</td>
+    </tr>
+    <tr>
+      <td><code>write()</code></td>
+      <td>將 buffer 資料寫入 fd</td>
+      <td>回傳實際寫入 bytes</td>
+      <td>寫檔案/pipe/stdout</td>
+    </tr>
+    <tr>
+      <td><code>close()</code></td>
+      <td>釋放 fd</td>
+      <td>—</td>
+      <td>每個 open/pipe 後都要呼叫</td>
+    </tr>
+    <tr>
+      <td><code>fork()</code></td>
+      <td>複製行程</td>
+      <td>parent=child PID, child=0</td>
+      <td>多行程程式的起點</td>
+    </tr>
+    <tr>
+      <td><code>execvp()</code></td>
+      <td>取代行程映像執行新程式</td>
+      <td>argv[] 最後必須是 NULL</td>
+      <td>shell 執行命令</td>
+    </tr>
+    <tr>
+      <td><code>dup2()</code></td>
+      <td>複製 fd，實現 I/O 重新導向</td>
+      <td>dup2(src, dst)</td>
+      <td>&gt; &lt; | 的底層</td>
+    </tr>
+    <tr>
+      <td><code>pipe()</code></td>
+      <td>建立行程間通道 [讀端, 寫端]</td>
+      <td>pipefd[0]=讀, pipefd[1]=寫</td>
+      <td>管線 cmd1 | cmd2</td>
+    </tr>
+  </table>
+
+  <div class="callout tip">
+    <strong>🎯 核心設計模式：</strong>Shell 的 I/O 重新導向完全建立在「fd 只是整數，可以被替換」的觀念上。<code>fork()</code>後子行程先用 <code>dup2()</code> 偷偷替換掉 0/1，再呼叫 <code>execvp()</code>——新程式以為自己在讀鍵盤或寫螢幕，實際上卻在讀檔案或寫 pipe。這種「資源繼承 + 重新導向」是 Unix 設計的精髓。
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<div class="footer">
+  Linux 系統程式教學 · 參考 POSIX 標準 · 概念整合自 fork/exec/dup2 系統設計
+</div>
+
+</body>
+</html>
