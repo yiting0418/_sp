@@ -36,7 +36,7 @@ L_exit: ...
 4. 回填：`quads[jmp_f_idx].result = quad_count`（跳出目標）
 5. 回填：`quads[jmp_idx].result = cond_start`（迴圈起點）
 
-程式碼位於 `statement()` 中的 `TK_WHILE` 分支（compiler.c 第 188~200 行），同時在 VM 中新增了 `JMP` 無條件跳轉指令的處理（compiler.c 第 291~293 行）。
+程式碼位於 `statement()` 中的 `TK_WHILE` 分支，同時在 VM 中新增了 `JMP` 無條件跳轉指令的處理。
 
 ### 新增項目
 
