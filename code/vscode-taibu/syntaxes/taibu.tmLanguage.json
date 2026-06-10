@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Tâi-bûn-lang",
+  "scopeName": "source.taibu",
+  "fileTypes": ["taibu"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#operators" },
+    { "include": "#punct" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-slash.taibu", "begin": "//", "end": "$" },
+        { "name": "comment.block.taibu", "begin": "/\\*", "end": "\\*/" }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.taibu",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [{ "name": "constant.character.escape.taibu", "match": "\\\\." }]
+    },
+    "numbers": {
+      "name": "constant.numeric.taibu",
+      "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+    },
+    "keywords": {
+      "patterns": [
+        { "name": "keyword.control.taibu", "match": "(?:(?<=^)|(?<=[^\\w-]))(nā-sī|nā-bô|tng|se̍h-lin-long|kè-sio̍k|tn̄g-khì)(?=[^\\w-]|$)" },
+        { "name": "keyword.declaration.taibu", "match": "(?:(?<=^)|(?<=[^\\w-]))(tòng-tsò|hàm-sò|tò-tńg)(?=[^\\w-]|$)" },
+        { "name": "keyword.operator.logic.taibu", "match": "(?:(?<=^)|(?<=[^\\w-]))(kah|ia̍h-sī|m̄-sī)(?=[^\\w-]|$)" },
+        { "name": "keyword.operator.comparison.taibu", "match": "(?:(?<=^)|(?<=[^\\w-]))(pênn-pênn|bô-pênn|khah-sè|khah-tuā|bô-khah-tuā|bô-khah-sè|kàu|kè)(?=[^\\w-]|$)" },
+        { "name": "constant.language.taibu", "match": "(?:(?<=^)|(?<=[^\\w-]))(si̍t-tsāi|bô-si̍t|bô)(?=[^\\w-]|$)" },
+        { "name": "keyword.io.taibu", "match": "(?:(?<=^)|(?<=[^\\w-]))(kóng|mn̄g)(?=[^\\w-]|$)" }
+      ]
+    },
+    "operators": {
+      "name": "keyword.operator.taibu",
+      "match": "[+\\-*/%=]|&&|\\|\\|"
+    },
+    "punct": {
+      "patterns": [
+        { "name": "punctuation.definition.block.taibu", "match": "[{}]" },
+        { "name": "punctuation.definition.array.taibu", "match": "[\\[\\]]" },
+        { "name": "punctuation.definition.paren.taibu", "match": "[()]" },
+        { "name": "punctuation.terminator.taibu", "match": ";" },
+        { "name": "punctuation.separator.taibu", "match": "," }
+      ]
+    }
+  }
+}

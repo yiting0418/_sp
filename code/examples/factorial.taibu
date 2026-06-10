@@ -1,0 +1,14 @@
+// factorial.taibu — 階乘計算（tng while 迴圈）
+hàm-sò kai-sǹg(n) {
+    tòng-tsò kiat-kó = 1 ;
+    tòng-tsò i = 1 ;
+    tng i bô-khah-tuā n {
+        kiat-kó = kiat-kó * i ;
+        i = i + 1 ;
+    }
+    tò-tńg kiat-kó ;
+}
+
+se̍h-lin-long n = 1 kàu 10 {
+    kóng n + "! = " + kai-sǹg(n) ;
+}

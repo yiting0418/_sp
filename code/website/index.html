@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台文程式語言 Tâi-bûn-lang</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700;900&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--red:#ef4444;--accent:#06b6d4;--ink:#0b1121;--paper:#f4f6f9;--pale:#e2e8f0;--muted:#64748b;--border:#cbd5e1;--cbg:#0a0f1c;--ctext:#94a3b8;--kw:#c084fc;--str:#34d399;--cmt:#6b7280;--num:#38bdf8}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-weight:300;line-height:1.7;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;border-bottom:3px solid var(--accent)}
+.nb{color:var(--accent);font-family:'Space Mono',monospace;font-size:.95rem;text-decoration:none}
+.nl{display:flex;gap:2rem;list-style:none}
+.nl a{color:#94a3b8;text-decoration:none;font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;transition:color .2s}
+.nl a:hover{color:var(--accent)}
+.hero{min-height:100vh;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 2rem 4rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,#1e293b 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,#1e293b 40px);opacity:.4}
+.htag{font-family:'Space Mono',monospace;color:var(--accent);font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;margin-bottom:1.5rem;position:relative;opacity:0;animation:fu .8s .2s ease forwards}
+.htitle{position:relative;text-align:center;opacity:0;animation:fu .8s .4s ease forwards}
+.hzh{font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:clamp(3.5rem,10vw,7rem);color:white;line-height:1}
+.hzh span{color:var(--accent)}
+.hro{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(1.1rem,3vw,1.8rem);color:#94a3b8;margin-top:.5rem;display:block}
+.hdesc{position:relative;margin-top:2rem;max-width:600px;text-align:center;color:#64748b;font-size:1.05rem;line-height:1.9;opacity:0;animation:fu .8s .6s ease forwards}
+.hbadges{position:relative;display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin-top:2rem;opacity:0;animation:fu .8s .8s ease forwards}
+.badge{background:#1e293b;border:1px solid #334155;color:var(--accent);padding:.35rem 1rem;border-radius:2px;font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.1em}
+.hcta{position:relative;display:flex;gap:1rem;margin-top:3rem;opacity:0;animation:fu .8s 1s ease forwards}
+.btn{display:inline-block;padding:.75rem 2rem;font-family:'Space Mono',monospace;font-size:.78rem;text-decoration:none;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;cursor:pointer;border:none}
+.bp{background:var(--accent);color:var(--ink);font-weight:700}
+.bp:hover{background:#0891b2;transform:translateY(-2px)}
+.bo{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.bo:hover{background:#1e293b;transform:translateY(-2px)}
+.hcode{position:relative;margin-top:3rem;width:100%;max-width:680px;opacity:0;animation:fu .8s 1.2s ease forwards}
+.cb{background:var(--cbg);border:1px solid #334155;border-radius:4px;overflow:hidden}
+.ch{background:#1e293b;padding:.6rem 1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid #334155}
+.dot{width:10px;height:10px;border-radius:50%}
+.dr{background:#ef4444}.da{background:#f59e0b}.dg{background:#10b981}
+.cfn{font-family:'Space Mono',monospace;font-size:.68rem;color:#64748b;margin-left:.5rem}
+.cbody{padding:1.5rem;overflow-x:auto}
+pre{font-family:'Space Mono',monospace;font-size:.82rem;line-height:1.85;color:var(--ctext)}
+.kw{color:var(--kw);font-weight:700}.str{color:var(--str)}.cmt{color:var(--cmt);font-style:italic}.num{color:var(--num)}.fn{color:#818cf8}
+section{padding:5rem 2rem}
+.si{max-width:1100px;margin:0 auto}
+.sl{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:.75rem}
+.st{font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:clamp(2rem,4vw,3rem);line-height:1.2;color:var(--ink);margin-bottom:1rem}
+.ss{color:var(--muted);font-size:1.05rem;max-width:600px;margin-bottom:3rem}
+.ks{background:var(--pale)}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem;margin-top:2rem}
+.kcard{background:var(--paper);border:1px solid var(--border);padding:1.2rem;border-radius:2px;display:flex;align-items:flex-start;gap:1rem;transition:transform .15s,border-color .15s}
+.kcard:hover{transform:translateY(-2px);border-color:var(--accent)}
+.kt{font-family:'Space Mono',monospace;font-size:.88rem;color:var(--red);font-weight:700;min-width:130px;line-height:1.4}
+.ki{flex:1}
+.kz{font-size:.95rem;font-weight:700;color:var(--ink)}
+.ke{font-size:.75rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:.2rem}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;margin-top:2.5rem}
+.fcard{background:var(--ink);color:var(--paper);padding:2rem;border-radius:2px;border-left:4px solid var(--accent)}
+.fico{font-size:2rem;margin-bottom:1rem;display:block}
+.ftit{font-weight:700;font-size:1.1rem;margin-bottom:.5rem;color:var(--accent)}
+.fdesc{font-size:.9rem;color:#94a3b8;line-height:1.7}
+.exs{background:var(--ink);color:var(--paper)}
+.exs .st{color:var(--paper)}
+.exs .ss{color:#475569}
+.tabs{display:flex;gap:0;border-bottom:1px solid #334155;overflow-x:auto}
+.tab{padding:.75rem 1.5rem;font-family:'Space Mono',monospace;font-size:.73rem;letter-spacing:.1em;cursor:pointer;color:#64748b;border:none;background:none;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:#64748b}
+.ep{display:none}
+.ep.active{display:block}
+.ins{background:var(--pale)}
+.isteps{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-top:2rem}
+.istep{background:var(--paper);border:1px solid var(--border);padding:1.5rem;border-radius:2px}
+.snum{font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;color:var(--border);line-height:1;margin-bottom:.75rem}
+.stit{font-weight:700;margin-bottom:.5rem}
+.sdesc{font-size:.9rem;color:var(--muted);margin-bottom:1rem}
+.ic{font-family:'Space Mono',monospace;font-size:.8rem;background:var(--cbg);color:var(--ctext);padding:.75rem 1rem;border-radius:2px;display:block;overflow-x:auto;line-height:1.8}
+.rb{height:6px;background:var(--red)}
+.gb{height:3px;background:var(--accent)}
+footer{background:var(--ink);color:#475569;padding:3rem 2rem;text-align:center}
+.fi{max-width:700px;margin:0 auto}
+.flogo{font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:1.5rem;color:var(--accent);margin-bottom:1rem}
+.flinks{display:flex;justify-content:center;gap:2rem;margin:1rem 0}
+.flinks a{color:#64748b;text-decoration:none;font-size:.85rem}
+.flinks a:hover{color:var(--accent)}
+.fmotto{font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:#64748b;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #1e293b}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:640px){.nl{display:none}.hcta{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nb" href="#">台文 Tâi-bûn</a>
+  <ul class="nl">
+    <li><a href="#features">特性</a></li>
+    <li><a href="#keywords">關鍵字</a></li>
+    <li><a href="#examples">範例</a></li>
+    <li><a href="#grammar">語法</a></li>
+    <li><a href="#install">安裝</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="htag">全球首個 · 台羅拼音程式語言</div>
+  <div class="htitle">
+    <div class="hzh"><span>台文</span>程式語言</div>
+    <span class="hro">Tâi-bûn-lang</span>
+  </div>
+  <p class="hdesc">用台灣閩南語（台羅拼音）寫程式。<br>強型態 · 直譯與編譯雙模式 · TaiVM 堆疊虛擬機 · 引用計數垃圾蒐集</p>
+  <div class="hbadges">
+    <div class="badge">Python 3.9+</div>
+    <div class="badge">強型態</div>
+    <div class="badge">直譯 + 編譯</div>
+    <div class="badge">TaiVM 堆疊機</div>
+    <div class="badge">MIT 授權</div>
+  </div>
+  <div class="hcta">
+    <a href="#install" class="btn bp">開始使用</a>
+    <a href="#examples" class="btn bo">看範例</a>
+  </div>
+  <div class="hcode">
+    <div class="cb">
+      <div class="ch"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div><span class="cfn">fibonacci.taibu</span></div>
+      <div class="cbody"><pre><span class="cmt">// 費波那契數列 ── Fibonacci in Tâi-bûn-lang</span>
+
+<span class="kw">hàm-sò</span> <span class="fn">fibonacci</span>(n) {
+    <span class="kw">nā-sī</span> n <span class="kw">bô-khah-tuā</span> <span class="num">1</span> {
+        <span class="kw">tò-tńg</span> n ;
+    }
+    <span class="kw">tò-tńg</span> <span class="fn">fibonacci</span>(n - <span class="num">1</span>) + <span class="fn">fibonacci</span>(n - <span class="num">2</span>) ;
+}
+
+<span class="kw">se̍h-lin-long</span> i = <span class="num">0</span> <span class="kw">kàu</span> <span class="num">9</span> {
+    <span class="kw">kóng</span> <span class="str">"F("</span> + i + <span class="str">") = "</span> + <span class="fn">fibonacci</span>(i) ;
+}</pre></div>
+    </div>
+  </div>
+</section>
+<div class="rb"></div>
+
+<section id="features">
+  <div class="si">
+    <div class="sl">語言特性</div>
+    <h2 class="st">為台語設計的程式語言</h2>
+    <p class="ss">完整的現代程式語言功能，以台羅拼音為語料庫，讓台語在數位時代活下去。</p>
+    <div class="fgrid">
+      <div class="fcard"><span class="fico">🔤</span><div class="ftit">台羅拼音關鍵字</div><div class="fdesc">所有保留字均使用台灣閩南語羅馬字，包含聲調符號，忠實呈現台語發音與書寫。</div></div>
+      <div class="fcard"><span class="fico">🔒</span><div class="ftit">強型態系統</div><div class="fdesc">整數、浮點數、字串、布林、陣列五種型態，執行期型態安全，不做隱性數值轉換。</div></div>
+      <div class="fcard"><span class="fico">⚡</span><div class="ftit">雙執行模式</div><div class="fdesc">直譯器直接走訪 AST；編譯器將程式碼轉為 TaiVM 位元組碼，再由堆疊虛擬機執行。</div></div>
+      <div class="fcard"><span class="fico">🗑️</span><div class="ftit">引用計數 GC</div><div class="fdesc">以 Python 物件引用計數為基礎，自動記憶體管理，無需手動釋放，循環引用由 Python 處理。</div></div>
+      <div class="fcard"><span class="fico">🏗️</span><div class="ftit">TaiVM 堆疊虛擬機</div><div class="fdesc">自製堆疊機，支援函式呼叫框架鏈、靜態作用域環境查找，附反組譯工具查看位元組碼。</div></div>
+      <div class="fcard"><span class="fico">🌐</span><div class="ftit">一等公民函式</div><div class="fdesc">函式可存為變數、傳遞引數。靜態作用域（Lexical Scope）確保閉包語意正確。</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="keywords" class="ks">
+  <div class="si">
+    <div class="sl">語料庫</div>
+    <h2 class="st">台語關鍵字一覽</h2>
+    <p class="ss">每個關鍵字都是真實的台語詞彙，以臺灣閩南語羅馬字拼音方案（台羅）拼寫，聲調完整標示。</p>
+    <div class="kgrid">
+      <div class="kcard"><div class="kt">nā-sī</div><div class="ki"><div class="kz">如果</div><div class="ke">if</div></div></div>
+      <div class="kcard"><div class="kt">nā-bô</div><div class="ki"><div class="kz">如果沒有</div><div class="ke">else</div></div></div>
+      <div class="kcard"><div class="kt">tng</div><div class="ki"><div class="kz">當……時</div><div class="ke">while</div></div></div>
+      <div class="kcard"><div class="kt">se̍h-lin-long</div><div class="ki"><div class="kz">迴圈（轉輪弄）</div><div class="ke">for</div></div></div>
+      <div class="kcard"><div class="kt">kè-sio̍k</div><div class="ki"><div class="kz">繼續</div><div class="ke">continue</div></div></div>
+      <div class="kcard"><div class="kt">tn̄g-khì</div><div class="ki"><div class="kz">斷開</div><div class="ke">break</div></div></div>
+      <div class="kcard"><div class="kt">hàm-sò</div><div class="ki"><div class="kz">函式</div><div class="ke">function</div></div></div>
+      <div class="kcard"><div class="kt">tò-tńg</div><div class="ki"><div class="kz">回傳（倒轉）</div><div class="ke">return</div></div></div>
+      <div class="kcard"><div class="kt">tòng-tsò</div><div class="ki"><div class="kz">定義變數（當作）</div><div class="ke">let / var</div></div></div>
+      <div class="kcard"><div class="kt">kóng</div><div class="ki"><div class="kz">輸出（說）</div><div class="ke">print</div></div></div>
+      <div class="kcard"><div class="kt">mn̄g</div><div class="ki"><div class="kz">輸入（問）</div><div class="ke">input</div></div></div>
+      <div class="kcard"><div class="kt">pênn-pênn</div><div class="ki"><div class="kz">等於</div><div class="ke">==</div></div></div>
+      <div class="kcard"><div class="kt">bô-pênn</div><div class="ki"><div class="kz">不等於</div><div class="ke">!=</div></div></div>
+      <div class="kcard"><div class="kt">khah-sè</div><div class="ki"><div class="kz">小於</div><div class="ke">&lt;</div></div></div>
+      <div class="kcard"><div class="kt">khah-tuā</div><div class="ki"><div class="kz">大於</div><div class="ke">&gt;</div></div></div>
+      <div class="kcard"><div class="kt">bô-khah-tuā</div><div class="ki"><div class="kz">小於等於（無較大）</div><div class="ke">&lt;=</div></div></div>
+      <div class="kcard"><div class="kt">bô-khah-sè</div><div class="ki"><div class="kz">大於等於（無較小）</div><div class="ke">&gt;=</div></div></div>
+      <div class="kcard"><div class="kt">kah</div><div class="ki"><div class="kz">且（甲）</div><div class="ke">and</div></div></div>
+      <div class="kcard"><div class="kt">ia̍h-sī</div><div class="ki"><div class="kz">或（抑是）</div><div class="ke">or</div></div></div>
+      <div class="kcard"><div class="kt">m̄-sī</div><div class="ki"><div class="kz">非（毋是）</div><div class="ke">not</div></div></div>
+      <div class="kcard"><div class="kt">si̍t-tsāi</div><div class="ki"><div class="kz">真（實在）</div><div class="ke">true</div></div></div>
+      <div class="kcard"><div class="kt">bô-si̍t</div><div class="ki"><div class="kz">假（無實）</div><div class="ke">false</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="examples" class="exs">
+  <div class="si">
+    <div class="sl">程式範例</div>
+    <h2 class="st">看台文程式怎麼寫</h2>
+    <p class="ss">從 Hello World 到遞迴函式，完整示範台文語言的特性。</p>
+    <div class="tabs">
+      <button class="tab active" data-tab="t1">Hello World</button>
+      <button class="tab" data-tab="t2">費波那契</button>
+      <button class="tab" data-tab="t3">階乘</button>
+      <button class="tab" data-tab="t4">控制流程</button>
+    </div>
+    <div id="t1" class="ep active"><div class="cb"><div class="ch"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div><span class="cfn">hello.taibu</span></div><div class="cbody"><pre><span class="cmt">// 台文的第一個程式</span>
+<span class="kw">kóng</span> <span class="str">"lí hó, Sè-kài!"</span> ;
+<span class="kw">kóng</span> <span class="str">"哈囉，世界！"</span> ;
+
+<span class="kw">tòng-tsò</span> miâ = <span class="str">"台灣"</span> ;
+<span class="kw">kóng</span> <span class="str">"lí hó, "</span> + miâ + <span class="str">"!"</span> ;</pre></div></div></div>
+    <div id="t2" class="ep"><div class="cb"><div class="ch"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div><span class="cfn">fibonacci.taibu</span></div><div class="cbody"><pre><span class="cmt">// 遞迴函式：費波那契數列</span>
+<span class="kw">hàm-sò</span> <span class="fn">fibonacci</span>(n) {
+    <span class="kw">nā-sī</span> n <span class="kw">bô-khah-tuā</span> <span class="num">1</span> {
+        <span class="kw">tò-tńg</span> n ;
+    }
+    <span class="kw">tò-tńg</span> <span class="fn">fibonacci</span>(n - <span class="num">1</span>) + <span class="fn">fibonacci</span>(n - <span class="num">2</span>) ;
+}
+
+<span class="kw">se̍h-lin-long</span> i = <span class="num">0</span> <span class="kw">kàu</span> <span class="num">9</span> {
+    <span class="kw">kóng</span> <span class="str">"F("</span> + i + <span class="str">") = "</span> + <span class="fn">fibonacci</span>(i) ;
+}</pre></div></div></div>
+    <div id="t3" class="ep"><div class="cb"><div class="ch"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div><span class="cfn">factorial.taibu</span></div><div class="cbody"><pre><span class="cmt">// tng（while）迴圈計算階乘</span>
+<span class="kw">hàm-sò</span> <span class="fn">kai-sǹg</span>(n) {
+    <span class="kw">tòng-tsò</span> kiat-kó = <span class="num">1</span> ;
+    <span class="kw">tòng-tsò</span> i = <span class="num">1</span> ;
+    <span class="kw">tng</span> i <span class="kw">bô-khah-tuā</span> n {
+        kiat-kó = kiat-kó * i ;
+        i = i + <span class="num">1</span> ;
+    }
+    <span class="kw">tò-tńg</span> kiat-kó ;
+}
+
+<span class="kw">se̍h-lin-long</span> n = <span class="num">1</span> <span class="kw">kàu</span> <span class="num">10</span> {
+    <span class="kw">kóng</span> n + <span class="str">"! = "</span> + <span class="fn">kai-sǹg</span>(n) ;
+}</pre></div></div></div>
+    <div id="t4" class="ep"><div class="cb"><div class="ch"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div><span class="cfn">control_flow.taibu</span></div><div class="cbody"><pre><span class="cmt">// kè-sio̍k (continue) 與 tn̄g-khì (break)</span>
+<span class="kw">se̍h-lin-long</span> i = <span class="num">1</span> <span class="kw">kàu</span> <span class="num">10</span> {
+    <span class="kw">nā-sī</span> i % <span class="num">2</span> <span class="kw">pênn-pênn</span> <span class="num">0</span> {
+        <span class="kw">kè-sio̍k</span> ;   <span class="cmt">// 偶數：繼續下一圈</span>
+    }
+    <span class="kw">kóng</span> i ;  <span class="cmt">// 印出奇數</span>
+}
+
+<span class="cmt">// nā-sī / nā-bô 多條件</span>
+<span class="kw">tòng-tsò</span> x = <span class="num">42</span> ;
+<span class="kw">nā-sī</span> x <span class="kw">khah-tuā</span> <span class="num">100</span> {
+    <span class="kw">kóng</span> <span class="str">"大數"</span> ;
+} <span class="kw">nā-bô</span> <span class="kw">nā-sī</span> x <span class="kw">khah-tuā</span> <span class="num">50</span> {
+    <span class="kw">kóng</span> <span class="str">"中數"</span> ;
+} <span class="kw">nā-bô</span> {
+    <span class="kw">kóng</span> <span class="str">"小數（"</span> + x + <span class="str">"）"</span> ;
+}</pre></div></div></div>
+  </div>
+</section>
+
+<section id="grammar">
+  <div class="si">
+    <div class="sl">正式語法</div>
+    <h2 class="st">EBNF 語法定義</h2>
+    <p class="ss">台文程式語言的形式文法，以 Extended Backus–Naur Form 表示，運算子優先序由低到高。</p>
+    <div class="cb"><div class="ch"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div><span class="cfn">grammar.ebnf（節錄）</span></div><div class="cbody"><pre style="color:#94a3b8;font-size:.78rem;">program     = { statement } EOF ;
+
+statement   = var_decl | if_stmt | while_stmt | for_stmt
+            | func_decl | return_stmt | break_stmt
+            | continue_stmt | print_stmt | block | ... ;
+
+var_decl    = <span class="kw">"tòng-tsò"</span> IDENT "=" expression ";" ;
+if_stmt     = <span class="kw">"nā-sī"</span> expression block [ <span class="kw">"nā-bô"</span> ( if_stmt | block ) ] ;
+while_stmt  = <span class="kw">"tng"</span> expression block ;
+for_stmt    = <span class="kw">"se̍h-lin-long"</span> IDENT "=" expression <span class="kw">"kàu"</span> expression block ;
+func_decl   = <span class="kw">"hàm-sò"</span> IDENT "(" [ param_list ] ")" block ;
+
+comp_op     = <span class="kw">"pênn-pênn"</span> | <span class="kw">"bô-pênn"</span> | <span class="kw">"khah-sè"</span>
+            | <span class="kw">"khah-tuā"</span> | <span class="kw">"bô-khah-tuā"</span> | <span class="kw">"bô-khah-sè"</span> ;
+
+<span class="cmt">(* 優先序：ia̍h-sī &lt; kah &lt; m̄-sī &lt; 比較 &lt; +-  &lt; */% &lt; 單元 &lt; 後綴 *)</span></pre></div></div>
+  </div>
+</section>
+
+<section id="install" class="ins">
+  <div class="si">
+    <div class="sl">開始使用</div>
+    <h2 class="st">安裝與執行</h2>
+    <p class="ss">只需 Python 3.9+，無需安裝任何第三方套件。四種執行模式任君選擇。</p>
+    <div class="isteps">
+      <div class="istep"><div class="snum">01</div><div class="stit">下載專案</div><div class="sdesc">從 GitHub 取得完整原始碼。</div><code class="ic">git clone https://github.com/taibu-lang/taibu<br>cd taibu</code></div>
+      <div class="istep"><div class="snum">02</div><div class="stit">直譯模式</div><div class="sdesc">直接執行 .taibu 原始碼，即時輸出結果。</div><code class="ic">python taibu.py run examples/hello.taibu</code></div>
+      <div class="istep"><div class="snum">03</div><div class="stit">編譯 + 執行</div><div class="sdesc">編譯為 TaiVM 位元組碼（.tbc），再執行。</div><code class="ic">python taibu.py compile hello.taibu<br>python taibu.py exec hello.tbc</code></div>
+      <div class="istep"><div class="snum">04</div><div class="stit">互動模式 REPL</div><div class="sdesc">啟動互動式命令列，即時測試程式碼片段。</div><code class="ic">python taibu.py repl</code></div>
+    </div>
+  </div>
+</section>
+<div class="gb"></div>
+
+<footer>
+  <div class="fi">
+    <div class="flogo">台文程式語言 Tâi-bûn-lang</div>
+    <p style="font-size:.85rem">以台羅拼音為靈魂的現代程式語言</p>
+    <div class="flinks">
+      <a href="#features">特性</a><a href="#keywords">關鍵字</a>
+      <a href="#examples">範例</a><a href="#grammar">語法</a><a href="#install">安裝</a>
+    </div>
+    <p class="fmotto">「台語毋是死語，是活跳跳的語言！」<br><em>Tâi-gí m̄-sī sí-gí, sī ua̍h-thiàu-thiàu ê gí-giân!</em></p>
+    <p style="margin-top:1.5rem;font-size:.75rem">MIT License · © 2026 Tâi-bûn-lang Project</p>
+  </div>
+</footer>
+<script>
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.ep').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

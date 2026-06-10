@@ -1,0 +1,22 @@
+{
+  "name": "taibu-lang",
+  "displayName": "台文程式語言 Tâi-bûn-lang",
+  "description": "語法高亮支援 for .taibu",
+  "version": "0.1.0",
+  "publisher": "taibu-lang",
+  "engines": { "vscode": "^1.60.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [{
+      "id": "taibu",
+      "aliases": ["Tâi-bûn-lang", "taibu", "台文"],
+      "extensions": [".taibu"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "taibu",
+      "scopeName": "source.taibu",
+      "path": "./syntaxes/taibu.tmLanguage.json"
+    }]
+  }
+}

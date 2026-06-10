@@ -1,0 +1,45 @@
+// control_flow.taibu — 控制流程示範
+// kè-sio̍k (continue)、tn̄g-khì (break)、nā-sī/nā-bô (if/else)
+
+kóng "=== 奇數示範（kè-sio̍k）===" ;
+se̍h-lin-long i = 1 kàu 10 {
+    nā-sī i % 2 pênn-pênn 0 {
+        kè-sio̍k ;
+    }
+    kóng i ;
+}
+
+kóng "=== 找第一個大於 100 的 2 次方（tng + tn̄g-khì）===" ;
+tòng-tsò p = 1 ;
+tng p bô-khah-tuā 100 {
+    p = p * 2 ;
+}
+kóng "答案 = " + p ;
+
+kóng "=== 質數判斷（hàm-sò）===" ;
+hàm-sò sī-tsit-sòo(n) {
+    nā-sī n khah-sè 2 { tò-tńg bô-si̍t ; }
+    se̍h-lin-long i = 2 kàu n - 1 {
+        nā-sī n % i pênn-pênn 0 { tò-tńg bô-si̍t ; }
+    }
+    tò-tńg si̍t-tsāi ;
+}
+
+tòng-tsò buf = "" ;
+se̍h-lin-long m = 2 kàu 50 {
+    nā-sī sī-tsit-sòo(m) {
+        buf = buf + m + " " ;
+    }
+}
+kóng "50 以內的質數：" ;
+kóng buf ;
+
+kóng "=== nā-sī / nā-bô 示範 ===" ;
+tòng-tsò x = 42 ;
+nā-sī x khah-tuā 100 {
+    kóng "大數" ;
+} nā-bô nā-sī x khah-tuā 50 {
+    kóng "中數" ;
+} nā-bô {
+    kóng "小數（" + x + "）" ;
+}

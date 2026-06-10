@@ -1,0 +1,11 @@
+// fibonacci.taibu — 費波那契數列（遞迴函式）
+hàm-sò fibonacci(n) {
+    nā-sī n bô-khah-tuā 1 {
+        tò-tńg n ;
+    }
+    tò-tńg fibonacci(n - 1) + fibonacci(n - 2) ;
+}
+
+se̍h-lin-long i = 0 kàu 9 {
+    kóng "F(" + i + ") = " + fibonacci(i) ;
+}

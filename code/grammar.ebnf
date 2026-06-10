@@ -1,0 +1,157 @@
+(* ============================================================ *)
+(*  台文程式語言 Tâi-bûn-lang — EBNF 語法定義                   *)
+(*  Tâi-bûn Programming Language — Formal Grammar               *)
+(* ============================================================ *)
+
+program         = { statement } EOF ;
+
+(* ──── 陳述句 Statements ──── *)
+
+statement       = var_decl
+                | assign_stmt
+                | if_stmt
+                | while_stmt
+                | for_stmt
+                | func_decl
+                | return_stmt
+                | break_stmt
+                | continue_stmt
+                | print_stmt
+                | input_stmt
+                | block
+                | expr_stmt
+                ;
+
+block           = "{" { statement } "}" ;
+
+var_decl        = "tòng-tsò" IDENT "=" expression ";" ;
+
+assign_stmt     = IDENT "=" expression ";" ;
+
+if_stmt         = "nā-sī" expression block
+                  [ "nā-bô" ( if_stmt | block ) ] ;
+
+while_stmt      = "tng" expression block ;
+
+for_stmt        = "se̍h-lin-long" IDENT "=" expression
+                  "kàu" expression
+                  [ "kè" expression ]
+                  block ;
+
+func_decl       = "hàm-sò" IDENT "(" [ param_list ] ")" block ;
+
+param_list      = IDENT { "," IDENT } ;
+
+return_stmt     = "tò-tńg" [ expression ] ";" ;
+
+break_stmt      = "tn̄g-khì" ";" ;
+
+continue_stmt   = "kè-sio̍k" ";" ;
+
+print_stmt      = "kóng" expression ";" ;
+
+input_stmt      = "mn̄g" IDENT ";" ;
+
+expr_stmt       = expression ";" ;
+
+(* ──── 表達式 Expressions（優先序由低到高）──── *)
+
+expression      = logic_or ;
+
+logic_or        = logic_and { "ia̍h-sī" logic_and } ;
+
+logic_and       = logic_not { "kah" logic_not } ;
+
+logic_not       = "m̄-sī" logic_not
+                | comparison
+                ;
+
+comparison      = addition { comp_op addition } ;
+
+comp_op         = "pênn-pênn"       (* ==  等於   *)
+                | "bô-pênn"         (* !=  不等於 *)
+                | "khah-sè"         (* <   小於   *)
+                | "khah-tuā"        (* >   大於   *)
+                | "bô-khah-tuā"     (* <=  小於等於 *)
+                | "bô-khah-sè"      (* >=  大於等於 *)
+                ;
+
+addition        = multiplication { ( "+" | "-" ) multiplication } ;
+
+multiplication  = unary { ( "*" | "/" | "%" ) unary } ;
+
+unary           = "-" unary
+                | "m̄-sī" unary
+                | postfix
+                ;
+
+postfix         = primary { postfix_op } ;
+
+postfix_op      = "[" expression "]"         (* 陣列索引 *)
+                | "(" [ arg_list ] ")"        (* 函式呼叫 *)
+                ;
+
+arg_list        = expression { "," expression } ;
+
+primary         = INTEGER
+                | FLOAT
+                | STRING
+                | "si̍t-tsāi"               (* true  *)
+                | "bô-si̍t"                 (* false *)
+                | IDENT
+                | "[" [ expression { "," expression } ] "]"   (* 陣列字面值 *)
+                | "(" expression ")"
+                ;
+
+(* ──── 終端符號 Terminals ──── *)
+
+INTEGER         = DIGIT { DIGIT } ;
+
+FLOAT           = DIGIT { DIGIT } "." DIGIT { DIGIT } ;
+
+STRING          = '"' { STRING_CHAR } '"' ;
+
+STRING_CHAR     = any_char_except_quote_and_newline
+                | "\\" ( '"' | "\\" | "n" | "t" )
+                ;
+
+IDENT           = ( LETTER | "_" ) { LETTER | DIGIT | "_" | "-" | taiLo_diacritic } ;
+
+taiLo_diacritic = (* Unicode 聲調符號：́ ̀ ̂ ̄ ̃ ̍ 及其組合 *) ;
+
+DIGIT           = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+LETTER          = "a".."z" | "A".."Z" | (* Unicode Latin Extended *) ;
+
+COMMENT         = "//" { any_char } NEWLINE
+                | "/*" { any_char } "*/"
+                ;
+
+(* ──── 運算子優先序（由低到高）──── *)
+
+(*
+  1. ia̍h-sī        (or)          左結合
+  2. kah            (and)         左結合
+  3. m̄-sī          (not)         右結合（單元）
+  4. pênn-pênn  bô-pênn
+     khah-sè  khah-tuā
+     bô-khah-tuā  bô-khah-sè    左結合（比較）
+  5. + -                          左結合（加減）
+  6. * / %                        左結合（乘除）
+  7. - m̄-sī                      右結合（單元）
+  8. [] ()                        左結合（後綴）
+  9. literals  identifiers        基本值
+*)
+
+(* ──── 型態系統 Type System ──── *)
+
+(*
+  台語名        英文          說明
+  ─────────────────────────────────────────────────
+  tsò-jî       Integer      64-bit 有號整數
+  sió-siàu     Float        64-bit IEEE 754 雙精度
+  jī-bîn       String       UTF-8 字串
+  pîng-iōng    Boolean      si̍t-tsāi / bô-si̍t
+  bîn-tsōo     Array        動態同質陣列
+  bô           Null         空值
+*)

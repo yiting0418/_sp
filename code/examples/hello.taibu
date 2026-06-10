@@ -1,0 +1,5 @@
+// hello.taibu — 台文程式語言第一個程式
+kóng "lí hó, Sè-kài!" ;
+
+tòng-tsò miâ = "台灣" ;
+kóng "lí hó, " + miâ + "!" ;
