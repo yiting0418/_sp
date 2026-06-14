@@ -17,6 +17,7 @@
 ### 習題 2 — code：台文（Tai-bûn）程式語言
 
 > [網站](https://yiting0418.github.io/_sp/code/website/index.html)
+
 > [程式碼](https://github.com/yiting0418/_sp/tree/master/code)
 
 - **關鍵檔案：** `lexer.py` / `parser.py` / `compiler.py` / `vm.py` / `taibu.py`
@@ -45,6 +46,7 @@
 ### 習題 4 — spbook：系統程式教材
 
 > [連結](https://yiting0418.github.io/_sp/spbook/spbook.html)
+
 > [file](https://github.com/yiting0418/_sp/tree/master/spbook)
 
 - **路徑：** 9 章 Markdown，含 `spbook.html` 整書 HTML 渲染
