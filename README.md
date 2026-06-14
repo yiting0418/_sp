@@ -3,10 +3,9 @@
 ---
 ### 習題 1 — p0：P0 編譯器 + 虛擬機（while 語法）
 
-> [GitHub 連結](https://github.com/yiting0418/_sp/tree/master/p0)
+> [程式碼](https://github.com/yiting0418/_sp/tree/master/p0)
 
-- **關鍵檔案：** `compiler.c`（Lexer + Parser + Code Generator + VM 合一）
-- **語言：** C
+- **關鍵檔案：** `compiler.c`（Lexer + Parser + Code Generator + VM 合一）、
 - **核心機制：**
   - 詞法分析 + 遞迴下降語法分析
   - 四元組中介碼（quadruples）：JMP、JMP_F、CALL、RET_VAL 等
@@ -17,10 +16,10 @@
 ---
 ### 習題 2 — code：台文（Tai-bûn）程式語言
 
-> [網站連結](https://yiting0418.github.io/_sp/code/website/index.html)
+> [網站](https://yiting0418.github.io/_sp/code/website/index.html)
+> [程式碼](https://github.com/yiting0418/_sp/tree/master/code)
 
 - **關鍵檔案：** `lexer.py` / `parser.py` / `compiler.py` / `vm.py` / `taibu.py`
-- **語言：** Python
 - **核心機制：**
   - 雙模式：`python taibu.py run <file>`（檔案執行）或 `python taibu.py repl`（REPL 互動）
   - 強型別、一級函式、詞法作用域、參考計數 GC
@@ -33,7 +32,6 @@
 
 > [原始碼 ZIP](aios_final/aios_enhanced_runtime.zip)
 
-- **雙實作：** Python（`aios_enhanced_runtime/`）+ Rust（`aios-rs/`）
 - **核心架構：**
   - L5 Syscall 核心：`agent_spawn`、`mem_store`、`mem_recall`、`tool_call` 等
   - 三層安全機制：ABAC 屬性權限控管、Intent Whitelist、異常偵測 + BehaviorGuard
@@ -46,7 +44,8 @@
 ---
 ### 習題 4 — spbook：系統程式教材
 
-> [線上閱讀](https://yiting0418.github.io/_sp/spbook/spbook.html)
+> [連結](https://yiting0418.github.io/_sp/spbook/spbook.html)
+> [file](https://github.com/yiting0418/_sp/tree/master/spbook)
 
 - **路徑：** 9 章 Markdown，含 `spbook.html` 整書 HTML 渲染
 - **章節內容：**
